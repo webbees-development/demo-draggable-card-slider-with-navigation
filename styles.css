@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+}
+
+:root {
+    --clr-bg: hsl(216, 21%, 26%);
+    --clr-logo-bg: white;
+    --clr-carousel-btn: white;
+}
+
+body {
+    align-items: center;
+    background-color: var(--clr-bg);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    width: 100vw;
+    max-width: 100vw;
+}
+
+main {
+    padding-inline: 2rem;
+    position: relative;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+.wrapper {
+    max-width: 1600px;
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel {
+    cursor: pointer;
+    font-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.carousel-btn-next,
+.carousel-btn-prev {
+    --item-height: 2rem;
+    cursor: pointer;
+    fill: var(--clr-carousel-btn);
+    height: var(--item-height);
+    opacity: 0.6;
+    position: absolute;
+    top: calc(50% - var(--item-height) / 2);
+    transition: opacity 200ms ease;
+    width: calc(var(--item-height) * 0.75);
+}
+
+.carousel-btn-next:hover,
+.carousel-btn-prev:hover {
+    opacity: 1;
+}
+
+.carousel-btn-next {
+    right: 0.5rem;
+}
+
+.carousel-btn-prev {
+    left: 0.5rem;
+}
+
+.slide {
+    --gap: 1rem;
+    --item-amount: 6;
+    background-color: var(--clr-logo-bg);
+    display: inline-block;
+    position: relative;
+    width: calc((100% - (var(--item-amount) - 1) * var(--gap)) / var(--item-amount));
+}
+
+.slide + .slide {
+    margin-left: var(--gap);
+}
+
+.slide img {
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    width: 100%;
+}
+
+@media (max-width: 1500px) {
+    .slide {
+        --item-amount: 5;
+    }
+}
+
+@media (max-width: 1300px) {
+    .slide {
+        --item-amount: 4;
+    }
+}
+
+@media (max-width: 1000px) {
+    .slide {
+        --item-amount: 3;
+    }
+}
+
+@media (max-width: 700px) {
+    .slide {
+        --item-amount: 2;
+    }
+}
+
+@media (max-width: 500px) {
+    .slide {
+        --item-amount: 1;
+    }
+}
+
+/* utility */
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
