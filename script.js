@@ -128,13 +128,14 @@ const prevButton = document.querySelector(".carousel-btn-prev");
 initButtonVisibility();
 
 nextButton.addEventListener("click", () => {
-    if (carousel.scrollLeft === steps[0]){
+    const prevScrollPos = carousel.scrollLeft;
+    const nextScrollPos = getNextSlideScrollPos(carousel.scrollLeft);
+    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+
+    if (prevScrollPos === steps[0]){
         prevButton.classList.remove("hide");
         prevButton.classList.add("show");
     }
-
-    const nextScrollPos = getNextSlideScrollPos(carousel.scrollLeft);
-    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
 
     if (nextScrollPos === steps[steps.length - 1]){
         nextButton.classList.remove("show");
@@ -143,13 +144,14 @@ nextButton.addEventListener("click", () => {
 });
 
 prevButton.addEventListener("click", () => {
-    if (carousel.scrollLeft === steps[steps.length - 1]){
+    const prevScrollPos = carousel.scrollLeft;
+    const nextScrollPos = getPrevSlideScrollPos(carousel.scrollLeft);
+    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+
+    if (prevScrollPos === steps[steps.length - 1]){
         nextButton.classList.remove("hide");
         nextButton.classList.add("show");
     }
-
-    const nextScrollPos = getPrevSlideScrollPos(carousel.scrollLeft);
-    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
 
     if (nextScrollPos === steps[0]) {
         prevButton.classList.remove("show");
