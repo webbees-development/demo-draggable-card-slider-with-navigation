@@ -1,3 +1,6 @@
+// stack overflow thread concerning smooth scroll issues in safari
+// https://stackoverflow.com/questions/56011205/is-there-a-safari-equivalent-for-scroll-behavior-smooth
+
 // ------ Overall Variables ------ //
 const carousel = document.querySelector(".carousel");
 const wrapper = document.querySelector(".wrapper");
@@ -103,7 +106,9 @@ function handleStopDrag(event) {
 
 function snapToClosestScrollPos(currentScrollPos) {
     const nextScrollPos = getClosestSlideScrollPos(currentScrollPos);
-    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    // the next line works in every browser except safari (and maybe IE)
+    // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    scrollSmoothX(carousel, nextScrollPos);
 
     if (nextScrollPos === steps[0]) {
         prevButton.classList.remove("show");
@@ -130,7 +135,9 @@ initButtonVisibility();
 nextButton.addEventListener("click", () => {
     const prevScrollPos = carousel.scrollLeft;
     const nextScrollPos = getNextSlideScrollPos(carousel.scrollLeft);
-    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    // the next line works in every browser except safari (and maybe IE)
+    // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    scrollSmoothX(carousel, nextScrollPos);
 
     if (prevScrollPos === steps[0]){
         prevButton.classList.remove("hide");
@@ -146,7 +153,9 @@ nextButton.addEventListener("click", () => {
 prevButton.addEventListener("click", () => {
     const prevScrollPos = carousel.scrollLeft;
     const nextScrollPos = getPrevSlideScrollPos(carousel.scrollLeft);
-    carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    // the next line works in every browser except safari (and maybe IE)
+    // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
+    scrollSmoothX(carousel, nextScrollPos);
 
     if (prevScrollPos === steps[steps.length - 1]){
         nextButton.classList.remove("hide");
@@ -186,4 +195,22 @@ function initButtonVisibility() {
 // ------ Utility Functions ------ //
 function isOverflown(element) {
     return element.clientWidth < element.scrollWidth || element.clientHeight < element.scrollHeight;
+}
+
+function scrollSmoothX(element, endPositionX) {
+    const startPos = element.scrollLeft;
+    const increasing = endPositionX > startPos;
+    let currentPos = element.scrollLeft;
+    function frame() {
+        // issue here
+        currentPos += (endPositionX - startPos) / 100;
+        if ((increasing && currentPos > endPositionX) || (!increasing && currentPos < endPositionX)) {
+            currentPos = endPositionX;
+        }
+        element.scrollLeft = currentPos;
+        if (currentPos === endPositionX) clearInterval(id);
+    }
+    if (Number.isInteger(endPositionX)) {
+        var id = setInterval(frame, 5);
+    }
 }
