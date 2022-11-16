@@ -30,18 +30,18 @@ window.addEventListener("resize", () => {
 });
 
 // function to get next slide position
-function getNextSlideScrollPos(currentScrollPos) {
+function getNextSlidePos(currentPos) {
     for (let step in steps) {
-        if (steps[step] > currentScrollPos) {
+        if (steps[step] > currentPos) {
             return steps[step];
         }
     };
 }
 
 // function to get prev slide position
-function getPrevSlideScrollPos(currentScrollPos) {
+function getPrevSlidePos(currentPos) {
     for (let step in steps) {
-        if (steps[step] >= currentScrollPos) {
+        if (steps[step] >= currentPos) {
             return steps[step - 1];
         }
     };
@@ -49,14 +49,14 @@ function getPrevSlideScrollPos(currentScrollPos) {
 }
 
 // function to get closest snap position
-function getClosestSlideScrollPos(currentScrollPos) {
-    if (currentScrollPos <= steps[0]) {
+function getClosestSlidePos(currentPos) {
+    if (currentPos <= steps[0]) {
         return steps[0];
     }
 
     for (let step in steps) {
-        if (steps[step] >= currentScrollPos) {
-            if (steps[step] - currentScrollPos < currentScrollPos - steps[step - 1]) {
+        if (steps[step] >= currentPos) {
+            if (steps[step] - currentPos < currentPos - steps[step - 1]) {
                 return steps[step];
             } else {
                 return steps[step - 1];
@@ -70,7 +70,7 @@ function getClosestSlideScrollPos(currentScrollPos) {
 // ------ Drag Function ------ //
 let isDragging = false;
 let startMousePos = 0;
-let startScrollLeft = 0;
+let startCarouselPos = 0;
 
 carousel.addEventListener("mousedown", handleStartDrag);
 carousel.addEventListener("touchstart", handleStartDrag);
@@ -87,37 +87,44 @@ function handleStartDrag(event) {
         isDragging = true;
         // check if mouse or touch event
         startMousePos = event.pageX ? event.pageX : event.changedTouches[0].pageX;
-        startScrollLeft = carousel.scrollLeft;
+        startCarouselPos = parseInt(getPosX(carousel));
     }
 }
 
 function handleMoveDrag(event) {
     // event.preventDefault();
     if (!isDragging) return;
-    carousel.scrollLeft = startScrollLeft + startMousePos - (event.pageX ? event.pageX : event.changedTouches[0].pageX);
+
+    const movedValue = rangeMovedValue(Math.round(startCarouselPos + startMousePos - (event.pageX ? event.pageX : event.changedTouches[0].pageX)));
+    carousel.setAttribute("style", `transform: translateX(-${movedValue}px) !important;`);
 }
 
 function handleStopDrag(event) {
     // event.preventDefault();
     if (!isDragging) return;
+    carousel.removeAttribute("style");
+
+    const movedValue = rangeMovedValue(Math.round(startCarouselPos + startMousePos - (event.pageX ? event.pageX : event.changedTouches[0].pageX)));
+    carousel.setAttribute("style", `transform: translateX(-${movedValue}px);`);
+
     isDragging = false;
-    snapToClosestScrollPos(startScrollLeft + startMousePos - (event.pageX ? event.pageX : event.changedTouches[0].pageX));
+    snapToClosestScrollPos(movedValue);
 }
 
-function snapToClosestScrollPos(currentScrollPos) {
-    const nextScrollPos = getClosestSlideScrollPos(currentScrollPos);
+function snapToClosestScrollPos(currentPos) {
+    const nextPos = getClosestSlidePos(currentPos);
     // the next line works in every browser except safari (and maybe IE)
     // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
-    scrollSmoothX(carousel, nextScrollPos);
+    moveX(carousel, currentPos, nextPos);
 
-    if (nextScrollPos === steps[0]) {
+    if (nextPos === steps[0]) {
         prevButton.classList.remove("show");
         prevButton.classList.add("hide");
     } else {
         prevButton.classList.remove("hide");
         prevButton.classList.add("show");
     }
-    if (nextScrollPos === steps[steps.length - 1]){
+    if (nextPos === steps[steps.length - 1]){
         nextButton.classList.remove("show");
         nextButton.classList.add("hide");
     } else {
@@ -133,36 +140,34 @@ const prevButton = document.querySelector(".carousel-btn-prev");
 initButtonVisibility();
 
 nextButton.addEventListener("click", () => {
-    const prevScrollPos = carousel.scrollLeft;
-    const nextScrollPos = getNextSlideScrollPos(carousel.scrollLeft);
-    // the next line works in every browser except safari (and maybe IE)
-    // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
-    scrollSmoothX(carousel, nextScrollPos);
+    const prevPos = getPosX(carousel);
+    const nextPos = getNextSlidePos(prevPos);
 
-    if (prevScrollPos === steps[0]){
+    moveX(carousel, prevPos, nextPos);
+
+    if (prevPos === steps[0]){
         prevButton.classList.remove("hide");
         prevButton.classList.add("show");
     }
 
-    if (nextScrollPos === steps[steps.length - 1]){
+    if (nextPos === steps[steps.length - 1]){
         nextButton.classList.remove("show");
         nextButton.classList.add("hide");
     } 
 });
 
 prevButton.addEventListener("click", () => {
-    const prevScrollPos = carousel.scrollLeft;
-    const nextScrollPos = getPrevSlideScrollPos(carousel.scrollLeft);
-    // the next line works in every browser except safari (and maybe IE)
-    // carousel.scrollTo({ left: nextScrollPos, behavior: 'smooth' });
-    scrollSmoothX(carousel, nextScrollPos);
+    const prevPos = getPosX(carousel);
+    const nextPos = getPrevSlidePos(prevPos);
 
-    if (prevScrollPos === steps[steps.length - 1]){
+    moveX(carousel, prevPos, nextPos);
+
+    if (prevPos === steps[steps.length - 1]){
         nextButton.classList.remove("hide");
         nextButton.classList.add("show");
     }
 
-    if (nextScrollPos === steps[0]) {
+    if (nextPos === steps[0]) {
         prevButton.classList.remove("show");
         prevButton.classList.add("hide");
     }
@@ -197,20 +202,30 @@ function isOverflown(element) {
     return element.clientWidth < element.scrollWidth || element.clientHeight < element.scrollHeight;
 }
 
-function scrollSmoothX(element, endPositionX) {
-    const startPos = element.scrollLeft;
-    const increasing = endPositionX > startPos;
-    let currentPos = element.scrollLeft;
-    function frame() {
-        // issue here
-        currentPos += (endPositionX - startPos) / 100;
-        if ((increasing && currentPos > endPositionX) || (!increasing && currentPos < endPositionX)) {
-            currentPos = endPositionX;
+function moveX(element, startPosX, endPosX) {
+    const animationDuration = 800;
+    element.animate(
+        [
+            { transform: `translateX(-${startPosX}px)` },
+            { transform: `translateX(-${endPosX}px)` }
+        ], 
+        { 
+            duration: animationDuration, 
+            fill: "forwards" 
         }
-        element.scrollLeft = currentPos;
-        if (currentPos === endPositionX) clearInterval(id);
-    }
-    if (Number.isInteger(endPositionX)) {
-        var id = setInterval(frame, 5);
+    );
+}
+
+function getPosX(element) {
+    return Math.abs(new WebKitCSSMatrix(window.getComputedStyle(element).transform).m41);
+}
+
+function rangeMovedValue(value) {
+    if (value > (carousel.scrollWidth - carousel.clientWidth)) {
+        return (carousel.scrollWidth - carousel.clientWidth);
+    } else if (value < 0) {
+        return 0;
+    } else {
+        return value;
     }
 }

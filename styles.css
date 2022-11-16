@@ -43,7 +43,7 @@ img {
 .carousel {
     cursor: pointer;
     font-size: 0;
-    overflow: hidden;
+    position: relative;
     white-space: nowrap;
 }
 
