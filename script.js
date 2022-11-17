@@ -3,7 +3,6 @@
 
 // ------ Overall Variables ------ //
 const carousel = document.querySelector(".carousel");
-const wrapper = document.querySelector(".wrapper");
 
 let steps = getSteps();
 
